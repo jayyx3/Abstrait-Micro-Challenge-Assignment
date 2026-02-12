@@ -5,13 +5,9 @@ import { createClient } from '@/utils/supabase/client'
 export default function GoogleSignInButton() {
   const handleSignIn = async () => {
     const supabase = createClient()
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
-    const isLocalhost =
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1'
-    const redirectBase = isLocalhost
-      ? 'http://localhost:3000'
-      : appUrl || 'https://abstrait-micro-challenge-assignment.vercel.app'
+    const redirectBase =
+      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
+      'https://abstrait-micro-challenge-assignment.vercel.app'
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
