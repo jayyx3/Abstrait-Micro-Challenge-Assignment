@@ -5,11 +5,13 @@ import { createClient } from '@/utils/supabase/client'
 export default function GoogleSignInButton() {
   const handleSignIn = async () => {
     const supabase = createClient()
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
+    const redirectBase = appUrl || window.location.origin
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${redirectBase}/auth/callback`,
       },
     })
 
