@@ -220,16 +220,16 @@ After deployment, add your Vercel URL to Google OAuth:
 
 ## 🐛 Problems Encountered & How I Solved Them
 
-### Problem 1: Project Folder Name with Spaces
-**Issue**: The project folder "Abstrait Micro Challenge Assignment" contains spaces and capital letters, which violates npm naming restrictions. When running `create-next-app`, it failed with error: "name can only contain URL-friendly characters" and "name can no longer contain capital letters".
+### Problem 1: Preventing Client-Side User-ID Spoofing in Inserts
+**Issue**: The add-bookmark flow sends `user_id` from the client (`AddBookmarkForm`). Even with UI controls, a malicious user could tamper with the request payload. If RLS `INSERT` policy is weak, forged `user_id` values can create cross-tenant data writes.
 
-**Solution**: 
-- Created the Next.js project structure manually instead of using `create-next-app`
-- Manually created all configuration files: `package.json`, `tsconfig.json`, `tailwind.config.ts`, `next.config.ts`
-- Set up proper folder structure for App Router (`app/`, `components/`, `utils/`)
-- Named the package as "smart-bookmark-app" in `package.json` while keeping the folder name as required
+**Solution**:
+- Enforced strict RLS `INSERT` policy with `WITH CHECK (auth.uid() = user_id)`
+- Ensured all reads are filtered by authenticated identity and not by trust in client input alone
+- Kept `ON DELETE CASCADE` relation to `auth.users` so stale records cannot survive account deletion
+- Validated behavior using multiple test accounts to confirm isolation at DB layer
 
-**Learning**: When automated tools fail due to constraints, understanding the underlying file structure allows for manual setup.
+**Learning**: In multi-tenant apps, trust boundaries must be enforced in the database, not in client code.
 
 ---
 
@@ -279,21 +279,16 @@ useEffect(() => {
 
 ---
 
-### Problem 4: Google OAuth Redirect URI Configuration
-**Issue**: Google OAuth requires exact matches for redirect URIs. Initially faced "redirect_uri_mismatch" errors because:
-- The URIs in Google Console didn't match Supabase's expected callback URL
-- Needed different URIs for local development vs. production
-- Confusion between "Authorized JavaScript origins" and "Authorized redirect URIs"
+### Problem 4: Session Drift Between Middleware, Server Components, and Browser Client
+**Issue**: Authentication state can drift when session refresh is not coordinated across middleware, server components, and browser client usage. This causes intermittent redirects, stale user context, or "logged-in but redirected to login" behavior under token rotation.
 
 **Solution**:
-- Documented exact redirect URI format required by Supabase
-- Added **both** development and production URLs:
-  - `https://[project-id].supabase.co/auth/v1/callback` (Supabase)
-  - `http://localhost:3000/auth/callback` (local dev)
-- Understood that JavaScript origins need base URL only, while redirect URIs need full callback path
-- Created callback route at `app/auth/callback/route.ts` to handle OAuth response
+- Implemented central session refresh in `middleware.ts` using Supabase SSR middleware helper
+- Used dedicated server client (`utils/supabase/server.ts`) and browser client (`utils/supabase/client.ts`) to avoid mixed runtime behavior
+- Wired cookie propagation via `getAll`/`setAll` to keep request/response cookie state consistent
+- Kept all protected routes behind middleware matcher so server rendering always receives valid session context
 
-**Learning**: OAuth is strict about URL matching - even trailing slashes matter. Always configure both development and production URLs.
+**Learning**: SSR auth reliability depends on consistent cookie lifecycle management across every request boundary.
 
 ---
 
