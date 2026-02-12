@@ -5,6 +5,7 @@ A modern, real-time bookmark management application built with Next.js, Supabase
 > **Built for**: Abstrait Micro Challenge Assignment  
 > **Time Limit**: 72 hours  
 > **Status**: ✅ Complete and Deployed
+> **Live URL**: https://abstrait-micro-challenge-assignment.vercel.app/login
 
 ---
 
@@ -216,7 +217,7 @@ git push -u origin main
 
 After deployment, add your Vercel URL to Google OAuth:
 - Go to Google Cloud Console → Credentials
-- Add `https://your-app.vercel.app/auth/callback` to authorized redirect URIs
+- Add `https://abstrait-micro-challenge-assignment.vercel.app/auth/callback` to authorized redirect URIs
 
 ## 🐛 Problems Encountered & How I Solved Them
 
@@ -377,7 +378,7 @@ CREATE POLICY "Users can view own bookmarks"
 ## 📚 How to Use This Project
 
 ### For Evaluators:
-1. Visit the live Vercel URL (provided in submission)
+1. Visit: https://abstrait-micro-challenge-assignment.vercel.app/login
 2. Click "Continue with Google" to sign in
 3. Add a few bookmarks with URLs and titles
 4. Open the same URL in another browser tab
