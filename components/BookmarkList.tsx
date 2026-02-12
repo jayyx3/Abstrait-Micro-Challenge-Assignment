@@ -1,7 +1,7 @@
 'use client'
 
 import { createClient } from '@/utils/supabase/client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type Bookmark = {
   id: string
@@ -14,7 +14,22 @@ type Bookmark = {
 export default function BookmarkList({ userId }: { userId: string }) {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
+
+  const fetchBookmarks = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('bookmarks')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching bookmarks:', error)
+    } else {
+      setBookmarks(data || [])
+    }
+    setLoading(false)
+  }, [supabase, userId])
 
   useEffect(() => {
     fetchBookmarks()
@@ -39,22 +54,7 @@ export default function BookmarkList({ userId }: { userId: string }) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [userId])
-
-  const fetchBookmarks = async () => {
-    const { data, error } = await supabase
-      .from('bookmarks')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching bookmarks:', error)
-    } else {
-      setBookmarks(data || [])
-    }
-    setLoading(false)
-  }
+  }, [fetchBookmarks, supabase, userId])
 
   const deleteBookmark = async (id: string) => {
     const { error } = await supabase.from('bookmarks').delete().eq('id', id)
